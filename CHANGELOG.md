@@ -4,6 +4,15 @@ All notable changes to Video Spell Checker are recorded here.
 
 ---
 
+## [v0.5.0] — 2026-02-18
+
+### Added
+- **Video preview in results** — the video player now appears at the top of the results card so you can immediately confirm which video was checked without scrolling back up.
+- **Estimated time remaining** — during the AI analysis phase, a live ETA ("~2m 30s remaining") is shown below the progress bar. Calculated from the per-frame processing rate and updated every poll. Shows "Calculating…" for the first few seconds while rate data is being collected.
+- `frames_done` and `total_frames` added to the progress payload from the backend to power the ETA calculation.
+
+---
+
 ## [v0.4.0] — 2026-02-18
 
 ### Added

@@ -201,6 +201,8 @@ def process_video(job_id: str, video_path: str):
             job["progress"] = {
                 "step": f"Analysing frame {i + 1} of {len(frames)}…",
                 "pct": pct,
+                "frames_done": i + 1,
+                "total_frames": len(frames),
             }
 
             result = analyze_frame(str(frame_path), i + 1)

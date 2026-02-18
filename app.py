@@ -9,6 +9,10 @@ import re
 import requests
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template
+from spellchecker import SpellChecker
+
+# One shared spell-checker instance
+_spell = SpellChecker()
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024  # 500 MB limit
@@ -40,21 +44,52 @@ def extract_frames(video_path: str, output_dir: str, fps: float = 0.5) -> list[P
     return sorted(Path(output_dir).glob("frame_*.jpg"))
 
 
+# ── Phrases that mean the model echoed our prompt back instead of reading the image
+_ECHO_MARKERS = [
+    "spell-checker", "spell checker", "video frame", "json object",
+    "no explanation", "no markdown", "reply with", "reply in json",
+    "look at this", "lower thirds", "graphics, etc", "you are a",
+    "on-screen text", "misspelled", "surrounding words",
+]
+
+def _is_echo(text: str) -> bool:
+    """Return True if the model returned the prompt instead of real caption text."""
+    if not text:
+        return False
+    t = text.lower()
+    return sum(1 for m in _ECHO_MARKERS if m in t) >= 2
+
+
+def _validate_errors(errors: list) -> list:
+    """
+    Cross-check each error LLaVA flagged against pyspellchecker.
+    Only keep words that a real dictionary also considers misspelled —
+    this eliminates false positives like 'action' or 'though'.
+    """
+    if not errors:
+        return []
+    confirmed = []
+    for err in errors:
+        word = re.sub(r"[^a-z]", "", err.get("word", "").lower())
+        if not word:
+            continue
+        if _spell.unknown([word]):        # pyspellchecker agrees it's wrong
+            confirmed.append(err)
+    return confirmed
+
+
 def analyze_frame(frame_path: str, frame_index: int, fps: float = 0.5) -> dict:
-    """Send a single frame to Ollama and get back on-screen text + spelling errors."""
+    """Send a single frame to Ollama and get back on-screen text + confirmed spelling errors."""
     with open(frame_path, "rb") as f:
         image_b64 = base64.standard_b64encode(f.read()).decode("utf-8")
 
     timestamp_sec = round(frame_index / fps)
 
+    # Short prompt — long prompts cause LLaVA to echo them back as "text"
     prompt = (
-        "You are a spell-checker for video captions. Look at this video frame carefully.\n"
-        "1. Find ALL visible on-screen text (captions, lower thirds, titles, graphics, etc.).\n"
-        "2. Check every word for spelling errors.\n\n"
-        "Reply with ONLY a JSON object — no explanation, no markdown — in exactly this format:\n"
-        '{"text": "exact visible text here", "errors": [{"word": "misspelled", "suggestion": "correct", "context": "surrounding words"}]}\n\n'
-        'If no on-screen text is visible return: {"text": null, "errors": []}\n'
-        'If text is present but correctly spelled return: {"text": "the text", "errors": []}'
+        "What text appears on screen in this image (captions, subtitles, overlays)?\n"
+        'Reply ONLY in JSON: {"text": "exact text or null", '
+        '"errors": [{"word": "misspelling", "suggestion": "correct form"}]}'
     )
 
     try:
@@ -62,13 +97,7 @@ def analyze_frame(frame_path: str, frame_index: int, fps: float = 0.5) -> dict:
             f"{OLLAMA_BASE_URL}/api/chat",
             json={
                 "model": OLLAMA_MODEL,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": prompt,
-                        "images": [image_b64],
-                    }
-                ],
+                "messages": [{"role": "user", "content": prompt, "images": [image_b64]}],
                 "stream": False,
             },
             timeout=120,
@@ -78,19 +107,25 @@ def analyze_frame(frame_path: str, frame_index: int, fps: float = 0.5) -> dict:
     except Exception:
         raw = ""
 
-    # Strip markdown code fences if the model wrapped its reply
+    # Strip markdown fences
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
-    raw = re.sub(r"\s*```$", "", raw)
+    raw = re.sub(r"\s*```$",          "", raw)
 
-    # Extract first JSON object from the response (models sometimes add prose)
-    match = re.search(r'\{.*\}', raw, re.DOTALL)
-    if match:
-        raw = match.group(0)
+    # Extract the first JSON object (model sometimes adds prose around it)
+    m = re.search(r'\{.*\}', raw, re.DOTALL)
+    raw = m.group(0) if m else ""
 
     try:
         result = json.loads(raw)
     except Exception:
         result = {"text": None, "errors": []}
+
+    # Discard result if the model echoed the prompt instead of reading the image
+    if _is_echo(str(result.get("text") or "")):
+        result = {"text": None, "errors": []}
+
+    # Cross-validate errors with pyspellchecker to eliminate false positives
+    result["errors"] = _validate_errors(result.get("errors", []))
 
     result["timestamp_sec"] = timestamp_sec
     result["frame_index"]   = frame_index

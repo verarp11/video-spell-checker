@@ -27,13 +27,16 @@ if ! command -v ollama &>/dev/null; then
 fi
 echo "✅  Ollama found"
 
-# 3. Make sure llava model is available
-MODEL="${OLLAMA_MODEL:-llama3.2-vision}"
-if ! ollama list | grep -q "$MODEL"; then
-  echo "⏳  Pulling model '$MODEL' (first-time download, ~7 GB, may take several minutes)…"
-  ollama pull "$MODEL"
+# 3. Make sure base model is available, then build the custom model
+BASE_MODEL="llama3.2-vision"
+if ! ollama list | grep -q "$BASE_MODEL"; then
+  echo "⏳  Pulling base model '$BASE_MODEL' (first-time download, ~7 GB, may take several minutes)…"
+  ollama pull "$BASE_MODEL"
 fi
-echo "✅  Model '$MODEL' ready"
+echo "✅  Base model '$BASE_MODEL' ready"
+echo "⏳  Building custom model 'video-spellcheck' from Modelfile…"
+ollama create video-spellcheck -f "$SCRIPT_DIR/Modelfile"
+echo "✅  Model 'video-spellcheck' ready"
 
 # 4. Start Ollama in background if not already running
 if ! curl -s http://localhost:11434/api/tags &>/dev/null; then

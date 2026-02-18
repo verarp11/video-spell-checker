@@ -1,6 +1,7 @@
 import os
 import uuid
 import json
+import logging
 import threading
 import subprocess
 import base64
@@ -10,6 +11,9 @@ import requests
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template
 from spellchecker import SpellChecker
+
+# Suppress noisy Werkzeug request logs (the 200 GET/POST lines)
+logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 # One shared spell-checker instance
 _spell = SpellChecker()
@@ -24,7 +28,7 @@ jobs = {}
 # Ollama config  (override via environment vars)
 # ──────────────────────────────────────────────
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_MODEL    = os.environ.get("OLLAMA_MODEL",    "llama3.2-vision")
+OLLAMA_MODEL    = os.environ.get("OLLAMA_MODEL",    "video-spellcheck")
 
 
 # ──────────────────────────────────────────────
@@ -85,15 +89,25 @@ def analyze_frame(frame_path: str, frame_index: int, fps: float = 0.5) -> dict:
 
     timestamp_sec = round(frame_index / fps)
 
-    system_instruction = (
-        "You are a video caption spell-checker. "
-        "When given an image, identify any on-screen text such as captions, "
-        "subtitles, lower thirds, titles, or graphic overlays. "
-        "Check every visible word for spelling errors. "
-        "Reply ONLY with a JSON object — no explanation, no markdown — in this exact format: "
-        '{"text": "exact visible text, or null if none", '
-        '"errors": [{"word": "misspelling", "suggestion": "correct spelling"}]}'
-    )
+    # JSON schema for structured output — forces the model to return valid JSON
+    _format = {
+        "type": "object",
+        "properties": {
+            "text":   {"type": ["string", "null"]},
+            "errors": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "word":       {"type": "string"},
+                        "suggestion": {"type": "string"},
+                    },
+                    "required": ["word", "suggestion"],
+                },
+            },
+        },
+        "required": ["text", "errors"],
+    }
 
     try:
         response = requests.post(
@@ -102,15 +116,12 @@ def analyze_frame(frame_path: str, frame_index: int, fps: float = 0.5) -> dict:
                 "model": OLLAMA_MODEL,
                 "messages": [
                     {
-                        "role": "system",
-                        "content": system_instruction,
-                    },
-                    {
                         "role": "user",
                         "content": "What text is shown on screen? Are there any spelling errors?",
                         "images": [image_b64],
                     },
                 ],
+                "format": _format,
                 "stream": False,
             },
             timeout=120,

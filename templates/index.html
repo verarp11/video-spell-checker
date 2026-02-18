@@ -69,6 +69,11 @@
     #resetBtn { display: none; margin-top: 16px; background: none; border: 1px solid var(--border); border-radius: 10px; padding: 10px 20px; font-size: 14px; cursor: pointer; color: var(--muted); }
     #resetBtn:hover { background: var(--bg); }
     #errorAlert { display: none; margin-top: 16px; background: var(--error-bg); color: var(--error); border-radius: 10px; padding: 14px 18px; font-size: 14px; }
+    #videoPreview { display: none; width: 100%; border-radius: 10px; margin-top: 16px; max-height: 280px; background: #000; object-fit: contain; }
+    .file-info-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--primary-light); border-radius: 10px; margin-bottom: 18px; font-size: 13px; }
+    .file-info-bar .fi-icon { font-size: 20px; flex-shrink: 0; }
+    .file-info-bar .fi-name { font-weight: 700; color: var(--primary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-info-bar .fi-size { color: var(--muted); flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -87,6 +92,7 @@
       <div class="dz-hint">MP4, MOV, AVI, MKV &nbsp;·&nbsp; Max 500 MB</div>
       <div class="dz-file" id="fileName"></div>
     </div>
+    <video id="videoPreview" controls></video>
     <button id="uploadBtn" disabled>Check for Spelling Errors</button>
     <div id="errorAlert"></div>
   </div>
@@ -105,6 +111,11 @@
   </div>
 
   <div class="card" id="resultsSection">
+    <div class="file-info-bar" id="resultFileInfo" style="display:none">
+      <span class="fi-icon">🎬</span>
+      <span class="fi-name" id="resultFileName"></span>
+      <span class="fi-size" id="resultFileSize"></span>
+    </div>
     <div id="resultBadge"></div>
     <div class="stats-row" id="statsRow"></div>
     <div id="errorsBlock"></div>
@@ -117,15 +128,23 @@
 </div>
 
 <script>
-  const fileInput=document.getElementById('fileInput'),dropzone=document.getElementById('dropzone'),fileName=document.getElementById('fileName'),uploadBtn=document.getElementById('uploadBtn'),uploadCard=document.getElementById('uploadCard'),progressSec=document.getElementById('progressSection'),resultsSec=document.getElementById('resultsSection'),errorAlert=document.getElementById('errorAlert'),resetBtn=document.getElementById('resetBtn');
-  let selectedFile=null,pollTimer=null;
+  const fileInput=document.getElementById('fileInput'),dropzone=document.getElementById('dropzone'),fileName=document.getElementById('fileName'),uploadBtn=document.getElementById('uploadBtn'),uploadCard=document.getElementById('uploadCard'),progressSec=document.getElementById('progressSection'),resultsSec=document.getElementById('resultsSection'),errorAlert=document.getElementById('errorAlert'),resetBtn=document.getElementById('resetBtn'),videoPreview=document.getElementById('videoPreview');
+  let selectedFile=null,pollTimer=null,previewURL=null;
 
   fileInput.addEventListener('change',()=>{ if(fileInput.files.length) setFile(fileInput.files[0]); });
   dropzone.addEventListener('dragover',e=>{ e.preventDefault(); dropzone.classList.add('drag-over'); });
   dropzone.addEventListener('dragleave',()=>dropzone.classList.remove('drag-over'));
   dropzone.addEventListener('drop',e=>{ e.preventDefault(); dropzone.classList.remove('drag-over'); if(e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]); });
 
-  function setFile(file){ selectedFile=file; fileName.textContent=`📎 ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`; uploadBtn.disabled=false; }
+  function setFile(file){
+    selectedFile=file;
+    fileName.textContent=`📎 ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)`;
+    uploadBtn.disabled=false;
+    if(previewURL) URL.revokeObjectURL(previewURL);
+    previewURL=URL.createObjectURL(file);
+    videoPreview.src=previewURL;
+    videoPreview.style.display='block';
+  }
 
   uploadBtn.addEventListener('click',startUpload);
   async function startUpload(){
@@ -165,6 +184,11 @@
 
   function showResults(results){
     progressSec.style.display='none'; resultsSec.style.display='block'; resetBtn.style.display='inline-block';
+    if(selectedFile){
+      document.getElementById('resultFileName').textContent=selectedFile.name;
+      document.getElementById('resultFileSize').textContent=`${(selectedFile.size/1024/1024).toFixed(1)} MB`;
+      document.getElementById('resultFileInfo').style.display='flex';
+    }
     const errors=results.errors||[];
     document.getElementById('resultBadge').innerHTML=errors.length===0?'<span class="result-badge ok">✅ No spelling errors found!</span>':`<span class="result-badge fail">❌ ${errors.length} spelling error${errors.length>1?'s':''} found</span>`;
     document.getElementById('statsRow').innerHTML=`<div class="stat-box"><div class="val">${results.total_frames}</div><div class="lbl">Frames scanned</div></div><div class="stat-box"><div class="val">${results.frames_with_text}</div><div class="lbl">Frames with text</div></div><div class="stat-box"><div class="val" style="color:${errors.length?'var(--error)':'var(--success)'}">${errors.length}</div><div class="lbl">Spelling errors</div></div>`;
@@ -182,6 +206,9 @@
     clearInterval(pollTimer); selectedFile=null; fileInput.value=''; fileName.textContent=''; uploadBtn.disabled=true; uploadBtn.textContent='Check for Spelling Errors';
     errorAlert.style.display='none'; resultsSec.style.display='none'; progressSec.style.display='none'; uploadCard.style.display='block'; resetBtn.style.display='none';
     document.getElementById('progressFill').style.width='0%';
+    document.getElementById('resultFileInfo').style.display='none';
+    videoPreview.style.display='none'; videoPreview.src='';
+    if(previewURL){ URL.revokeObjectURL(previewURL); previewURL=null; }
   }
   function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 </script>

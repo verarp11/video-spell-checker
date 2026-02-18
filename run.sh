@@ -28,9 +28,9 @@ fi
 echo "✅  Ollama found"
 
 # 3. Make sure llava model is available
-MODEL="${OLLAMA_MODEL:-llava}"
+MODEL="${OLLAMA_MODEL:-llama3.2-vision}"
 if ! ollama list | grep -q "$MODEL"; then
-  echo "⏳  Pulling model '$MODEL' (first-time download, may take a few minutes)…"
+  echo "⏳  Pulling model '$MODEL' (first-time download, ~7 GB, may take several minutes)…"
   ollama pull "$MODEL"
 fi
 echo "✅  Model '$MODEL' ready"

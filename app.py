@@ -24,7 +24,7 @@ jobs = {}
 # Ollama config  (override via environment vars)
 # ──────────────────────────────────────────────
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_MODEL    = os.environ.get("OLLAMA_MODEL",    "llava")
+OLLAMA_MODEL    = os.environ.get("OLLAMA_MODEL",    "llama3.2-vision")
 
 
 # ──────────────────────────────────────────────
@@ -85,11 +85,14 @@ def analyze_frame(frame_path: str, frame_index: int, fps: float = 0.5) -> dict:
 
     timestamp_sec = round(frame_index / fps)
 
-    # Short prompt — long prompts cause LLaVA to echo them back as "text"
-    prompt = (
-        "What text appears on screen in this image (captions, subtitles, overlays)?\n"
-        'Reply ONLY in JSON: {"text": "exact text or null", '
-        '"errors": [{"word": "misspelling", "suggestion": "correct form"}]}'
+    system_instruction = (
+        "You are a video caption spell-checker. "
+        "When given an image, identify any on-screen text such as captions, "
+        "subtitles, lower thirds, titles, or graphic overlays. "
+        "Check every visible word for spelling errors. "
+        "Reply ONLY with a JSON object — no explanation, no markdown — in this exact format: "
+        '{"text": "exact visible text, or null if none", '
+        '"errors": [{"word": "misspelling", "suggestion": "correct spelling"}]}'
     )
 
     try:
@@ -97,7 +100,17 @@ def analyze_frame(frame_path: str, frame_index: int, fps: float = 0.5) -> dict:
             f"{OLLAMA_BASE_URL}/api/chat",
             json={
                 "model": OLLAMA_MODEL,
-                "messages": [{"role": "user", "content": prompt, "images": [image_b64]}],
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": system_instruction,
+                    },
+                    {
+                        "role": "user",
+                        "content": "What text is shown on screen? Are there any spelling errors?",
+                        "images": [image_b64],
+                    },
+                ],
                 "stream": False,
             },
             timeout=120,

@@ -4,6 +4,24 @@ All notable changes to Video Spell Checker are recorded here.
 
 ---
 
+## [v0.6.0] — 2026-02-19
+
+### Added
+- **Language selector** — choose English or Hinglish before uploading. Displayed as pill buttons (🇬🇧 / 🇮🇳) in the upload card. Language is sent to the backend with every upload.
+- **Hinglish spell-check mode** — when Hinglish is selected, `pyspellchecker` validation is disabled (it would flag all Roman-script Hindi words as errors). The vision model is told via the user message that common Hinglish words like "kya", "nahi", "yaar" are correctly spelled.
+- **Audio transcription with Whisper** — `faster-whisper` (small model, ~480 MB, downloaded once) extracts and transcribes the video audio. Uses language `"hi"` for Hinglish, `"en"` for English.
+- **Caption Accuracy tab** — new results tab showing every Whisper audio segment alongside what was shown on screen at that timestamp. For English: auto-flagged as Match / Partial / Mismatch / No Caption. For Hinglish: side-by-side "Review" display since audio (Devanagari/Hindi) and captions (Roman script) can't be auto-compared.
+- **4-step progress indicator** — Transcribing audio → Extracting frames → Analysing with AI → Comparing captions.
+- **Tabbed results** — Spelling Errors, Caption Accuracy, and Transcript now in separate tabs instead of stacked sections.
+- `faster-whisper>=1.0.0` added to `requirements.txt`.
+
+### Changed
+- `process_video` now accepts and passes `language` to all analysis functions.
+- Progress payload now includes `phase` field (`audio`, `frames`, `analyse`, `compare`, `done`) used by the frontend to advance the correct step indicator.
+- Stats row now shows audio segment count alongside frame and error counts.
+
+---
+
 ## [v0.5.0] — 2026-02-18
 
 ### Added

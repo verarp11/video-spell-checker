@@ -11,29 +11,45 @@
       --text: #1a1a2e; --muted: #6b7280; --border: #e5e7eb;
       --success: #16a34a; --success-bg: #f0fdf4;
       --error: #dc2626; --error-bg: #fef2f2;
+      --warn: #d97706; --warn-bg: #fffbeb;
       --radius: 14px; --shadow: 0 2px 12px rgba(0,0,0,0.07);
     }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 40px 16px 80px; }
-    .container { max-width: 720px; margin: 0 auto; }
+    .container { max-width: 760px; margin: 0 auto; }
     header { text-align: center; margin-bottom: 36px; }
     header .logo { font-size: 44px; margin-bottom: 8px; }
     header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
     header p { color: var(--muted); margin-top: 6px; font-size: 15px; }
     .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; margin-bottom: 20px; }
-    #dropzone { border: 2.5px dashed var(--border); border-radius: 12px; padding: 48px 24px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; position: relative; }
+
+    /* Upload */
+    #dropzone { border: 2.5px dashed var(--border); border-radius: 12px; padding: 40px 24px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; position: relative; }
     #dropzone:hover, #dropzone.drag-over { border-color: var(--primary); background: var(--primary-light); }
     #dropzone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-    #dropzone .dz-icon { font-size: 48px; margin-bottom: 12px; display: block; }
+    #dropzone .dz-icon { font-size: 44px; margin-bottom: 10px; display: block; }
     #dropzone .dz-title { font-size: 16px; font-weight: 600; }
     #dropzone .dz-hint { font-size: 13px; color: var(--muted); margin-top: 4px; }
     #dropzone .dz-file { font-size: 14px; font-weight: 600; color: var(--primary); margin-top: 10px; }
-    #uploadBtn { display: block; width: 100%; margin-top: 18px; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+    #videoPreview { display: none; width: 100%; border-radius: 10px; margin-top: 16px; max-height: 260px; background: #000; object-fit: contain; }
+
+    /* Language selector */
+    .lang-row { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+    .lang-row label { font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+    .lang-btns { display: flex; gap: 8px; }
+    .lang-btn { padding: 7px 18px; border-radius: 99px; border: 2px solid var(--border); background: transparent; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--muted); transition: all 0.15s; }
+    .lang-btn.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+
+    #uploadBtn { display: block; width: 100%; margin-top: 16px; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
     #uploadBtn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
     #uploadBtn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    #errorAlert { display: none; margin-top: 16px; background: var(--error-bg); color: var(--error); border-radius: 10px; padding: 14px 18px; font-size: 14px; }
+
+    /* Progress */
     #progressSection { display: none; }
     .progress-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
     .progress-bar-wrap { background: var(--border); border-radius: 99px; height: 8px; overflow: hidden; }
     .progress-bar-fill { height: 100%; border-radius: 99px; background: var(--primary); transition: width 0.4s ease; width: 0%; }
+    #progressEta { font-size: 12px; color: var(--muted); text-align: right; margin-top: 5px; min-height: 16px; }
     .progress-steps { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
     .step-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
     .step-item.active { color: var(--text); font-weight: 600; }
@@ -43,39 +59,59 @@
     .step-item.done .step-dot { background: var(--success); }
     .spinner { width: 18px; height: 18px; border: 2.5px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Results */
     #resultsSection { display: none; }
+    .file-info-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--primary-light); border-radius: 10px; margin-bottom: 14px; font-size: 13px; }
+    .file-info-bar .fi-icon { font-size: 20px; flex-shrink: 0; }
+    .file-info-bar .fi-name { font-weight: 700; color: var(--primary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-info-bar .fi-size { color: var(--muted); flex-shrink: 0; }
+    #resultVideo { display: none; width: 100%; border-radius: 10px; margin-bottom: 18px; max-height: 200px; background: #000; object-fit: contain; }
     .result-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 99px; font-size: 13px; font-weight: 700; margin-bottom: 18px; }
     .result-badge.ok { background: var(--success-bg); color: var(--success); }
     .result-badge.fail { background: var(--error-bg); color: var(--error); }
     .stats-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-    .stat-box { flex: 1; min-width: 120px; background: var(--bg); border-radius: 10px; padding: 12px 16px; }
+    .stat-box { flex: 1; min-width: 110px; background: var(--bg); border-radius: 10px; padding: 12px 16px; }
     .stat-box .val { font-size: 22px; font-weight: 800; }
     .stat-box .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+    .tab-btn { padding: 9px 18px; font-size: 13px; font-weight: 600; border: none; background: none; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color 0.15s, border-color 0.15s; }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* Tables */
     .section-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
-    .error-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .error-table th { text-align: left; padding: 8px 12px; background: var(--bg); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); }
-    .error-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
-    .error-table tr:last-child td { border-bottom: none; }
-    .error-table tr:hover td { background: var(--bg); }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .data-table th { text-align: left; padding: 8px 12px; background: var(--bg); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); }
+    .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: var(--bg); }
     .tag-error { display: inline-block; background: var(--error-bg); color: var(--error); font-weight: 700; padding: 2px 8px; border-radius: 6px; font-size: 12px; }
     .tag-fix { display: inline-block; background: var(--success-bg); color: var(--success); font-weight: 600; padding: 2px 8px; border-radius: 6px; font-size: 12px; }
-    .transcript-section { margin-top: 20px; }
+
+    /* Caption accuracy status badges */
+    .status-match    { display:inline-block; background:var(--success-bg); color:var(--success); font-weight:700; padding:2px 8px; border-radius:6px; font-size:11px; }
+    .status-partial  { display:inline-block; background:var(--warn-bg); color:var(--warn); font-weight:700; padding:2px 8px; border-radius:6px; font-size:11px; }
+    .status-mismatch { display:inline-block; background:var(--error-bg); color:var(--error); font-weight:700; padding:2px 8px; border-radius:6px; font-size:11px; }
+    .status-nocap    { display:inline-block; background:#f1f5f9; color:var(--muted); font-weight:700; padding:2px 8px; border-radius:6px; font-size:11px; }
+    .status-review   { display:inline-block; background:var(--primary-light); color:var(--primary); font-weight:700; padding:2px 8px; border-radius:6px; font-size:11px; }
+
+    /* Transcript */
     .transcript-toggle { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer; color: var(--muted); }
     .transcript-toggle:hover { background: var(--bg); }
     #transcriptBody { display: none; margin-top: 12px; }
     .transcript-row { display: flex; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
     .transcript-row:last-child { border-bottom: none; }
     .ts-time { color: var(--primary); font-weight: 600; flex-shrink: 0; width: 40px; }
+
+    /* Hinglish note */
+    .hinglish-note { background: var(--primary-light); color: var(--primary); border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+
     #resetBtn { display: none; margin-top: 16px; background: none; border: 1px solid var(--border); border-radius: 10px; padding: 10px 20px; font-size: 14px; cursor: pointer; color: var(--muted); }
     #resetBtn:hover { background: var(--bg); }
-    #errorAlert { display: none; margin-top: 16px; background: var(--error-bg); color: var(--error); border-radius: 10px; padding: 14px 18px; font-size: 14px; }
-    #videoPreview { display: none; width: 100%; border-radius: 10px; margin-top: 16px; max-height: 280px; background: #000; object-fit: contain; }
-    #resultVideo { display: none; width: 100%; border-radius: 10px; margin-bottom: 18px; max-height: 200px; background: #000; object-fit: contain; }
-    .file-info-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--primary-light); border-radius: 10px; margin-bottom: 14px; font-size: 13px; }
-    .file-info-bar .fi-icon { font-size: 20px; flex-shrink: 0; }
-    .file-info-bar .fi-name { font-weight: 700; color: var(--primary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .file-info-bar .fi-size { color: var(--muted); flex-shrink: 0; }
-    #progressEta { font-size: 12px; color: var(--muted); text-align: right; margin-top: 5px; min-height: 16px; }
   </style>
 </head>
 <body>
@@ -83,9 +119,10 @@
   <header>
     <div class="logo">🎬</div>
     <h1>Video Spell Checker</h1>
-    <p>Upload a video and AI will scan every frame for spelling errors in on-screen text.</p>
+    <p>Upload a video — AI will check captions for spelling errors and match them against the audio.</p>
   </header>
 
+  <!-- Upload card -->
   <div class="card" id="uploadCard">
     <div id="dropzone">
       <input type="file" id="fileInput" accept="video/*" />
@@ -95,10 +132,20 @@
       <div class="dz-file" id="fileName"></div>
     </div>
     <video id="videoPreview" controls></video>
+
+    <div class="lang-row">
+      <label>Video language:</label>
+      <div class="lang-btns">
+        <button class="lang-btn active" data-lang="english" onclick="setLang('english')">🇬🇧 English</button>
+        <button class="lang-btn" data-lang="hinglish" onclick="setLang('hinglish')">🇮🇳 Hinglish</button>
+      </div>
+    </div>
+
     <button id="uploadBtn" disabled>Check for Spelling Errors</button>
     <div id="errorAlert"></div>
   </div>
 
+  <!-- Progress card -->
   <div class="card" id="progressSection">
     <div class="progress-label">
       <span id="progressStep">Starting…</span>
@@ -107,12 +154,14 @@
     <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
     <div id="progressEta"></div>
     <div class="progress-steps" id="progressSteps">
-      <div class="step-item active" id="stepExtract"><div class="spinner"></div><span>Extracting frames from video</span></div>
+      <div class="step-item active" id="stepAudio"><div class="spinner"></div><span>Transcribing audio</span></div>
+      <div class="step-item" id="stepExtract"><div class="step-dot"></div><span>Extracting frames</span></div>
       <div class="step-item" id="stepAnalyse"><div class="step-dot"></div><span>Analysing frames with AI</span></div>
-      <div class="step-item" id="stepReport"><div class="step-dot"></div><span>Compiling spell-check report</span></div>
+      <div class="step-item" id="stepCompare"><div class="step-dot"></div><span>Comparing captions to audio</span></div>
     </div>
   </div>
 
+  <!-- Results card -->
   <div class="card" id="resultsSection">
     <div class="file-info-bar" id="resultFileInfo" style="display:none">
       <span class="fi-icon">🎬</span>
@@ -120,21 +169,58 @@
       <span class="fi-size" id="resultFileSize"></span>
     </div>
     <video id="resultVideo" controls></video>
+
     <div id="resultBadge"></div>
     <div class="stats-row" id="statsRow"></div>
-    <div id="errorsBlock"></div>
-    <div class="transcript-section">
-      <button class="transcript-toggle" onclick="toggleTranscript()">📄 View full on-screen text transcript</button>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('spelling')">✏️ Spelling Errors</button>
+      <button class="tab-btn" onclick="switchTab('captions')">🎤 Caption Accuracy</button>
+      <button class="tab-btn" onclick="switchTab('transcript')">📄 Transcript</button>
+    </div>
+
+    <div class="tab-pane active" id="tabSpelling">
+      <div id="errorsBlock"></div>
+    </div>
+
+    <div class="tab-pane" id="tabCaptions">
+      <div id="captionBlock"></div>
+    </div>
+
+    <div class="tab-pane" id="tabTranscript">
       <div id="transcriptBody"></div>
     </div>
+
     <button id="resetBtn" onclick="resetApp()">↩ Check another video</button>
   </div>
 </div>
 
 <script>
-  const fileInput=document.getElementById('fileInput'),dropzone=document.getElementById('dropzone'),fileName=document.getElementById('fileName'),uploadBtn=document.getElementById('uploadBtn'),uploadCard=document.getElementById('uploadCard'),progressSec=document.getElementById('progressSection'),resultsSec=document.getElementById('resultsSection'),errorAlert=document.getElementById('errorAlert'),resetBtn=document.getElementById('resetBtn'),videoPreview=document.getElementById('videoPreview'),resultVideo=document.getElementById('resultVideo');
-  let selectedFile=null,pollTimer=null,previewURL=null,analysisStartTime=null;
+  const fileInput=document.getElementById('fileInput'),
+        dropzone=document.getElementById('dropzone'),
+        fileName=document.getElementById('fileName'),
+        uploadBtn=document.getElementById('uploadBtn'),
+        uploadCard=document.getElementById('uploadCard'),
+        progressSec=document.getElementById('progressSection'),
+        resultsSec=document.getElementById('resultsSection'),
+        errorAlert=document.getElementById('errorAlert'),
+        resetBtn=document.getElementById('resetBtn'),
+        videoPreview=document.getElementById('videoPreview'),
+        resultVideo=document.getElementById('resultVideo');
 
+  let selectedFile=null, pollTimer=null, previewURL=null, analysisStartTime=null;
+  let selectedLang='english';
+
+  // ── Language selector
+  function setLang(lang){
+    selectedLang=lang;
+    document.querySelectorAll('.lang-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.lang===lang);
+    });
+  }
+
+  // ── File selection
   fileInput.addEventListener('change',()=>{ if(fileInput.files.length) setFile(fileInput.files[0]); });
   dropzone.addEventListener('dragover',e=>{ e.preventDefault(); dropzone.classList.add('drag-over'); });
   dropzone.addEventListener('dragleave',()=>dropzone.classList.remove('drag-over'));
@@ -150,22 +236,36 @@
     videoPreview.style.display='block';
   }
 
-  uploadBtn.addEventListener('click',startUpload);
+  // ── Upload
+  uploadBtn.addEventListener('click', startUpload);
   async function startUpload(){
     if(!selectedFile) return;
-    errorAlert.style.display='none'; uploadBtn.disabled=true; uploadBtn.textContent='Uploading…';
-    const fd=new FormData(); fd.append('video',selectedFile);
+    errorAlert.style.display='none';
+    uploadBtn.disabled=true;
+    uploadBtn.textContent='Uploading…';
+    const fd=new FormData();
+    fd.append('video', selectedFile);
+    fd.append('language', selectedLang);
     try{
-      const res=await fetch('/upload',{method:'POST',body:fd}); const data=await res.json();
+      const res=await fetch('/upload',{method:'POST',body:fd});
+      const data=await res.json();
       if(data.error) throw new Error(data.error);
-      uploadCard.style.display='none'; progressSec.style.display='block'; pollStatus(data.job_id);
-    }catch(err){ uploadBtn.disabled=false; uploadBtn.textContent='Check for Spelling Errors'; showError(err.message||'Upload failed.'); }
+      uploadCard.style.display='none';
+      progressSec.style.display='block';
+      pollStatus(data.job_id);
+    }catch(err){
+      uploadBtn.disabled=false;
+      uploadBtn.textContent='Check for Spelling Errors';
+      showError(err.message||'Upload failed.');
+    }
   }
 
+  // ── Polling
   function pollStatus(jobId){
     pollTimer=setInterval(async()=>{
       try{
-        const res=await fetch(`/status/${jobId}`); const data=await res.json();
+        const res=await fetch(`/status/${jobId}`);
+        const data=await res.json();
         updateProgress(data.progress);
         if(data.status==='done'){ clearInterval(pollTimer); showResults(data.results); }
         else if(data.status==='error'){ clearInterval(pollTimer); progressSec.style.display='none'; uploadCard.style.display='block'; showError(data.error||'Processing failed.'); uploadBtn.disabled=false; uploadBtn.textContent='Check for Spelling Errors'; }
@@ -173,6 +273,7 @@
     },1500);
   }
 
+  // ── Progress + ETA
   function formatEta(sec){
     if(sec<=10) return '< 10s remaining';
     const m=Math.floor(sec/60), s=Math.round(sec%60);
@@ -181,70 +282,162 @@
 
   function updateProgress(p){
     if(!p) return;
-    const pct=p.pct||0;
+    const pct=p.pct||0, phase=p.phase||'';
     document.getElementById('progressFill').style.width=pct+'%';
     document.getElementById('progressStep').textContent=p.step||'';
     document.getElementById('progressPct').textContent=pct+'%';
 
-    // ETA — only during frame analysis phase
+    // ETA
     const etaEl=document.getElementById('progressEta');
     if(p.frames_done && p.total_frames && p.frames_done < p.total_frames){
       if(!analysisStartTime) analysisStartTime=Date.now();
       const elapsed=(Date.now()-analysisStartTime)/1000;
       if(elapsed>4 && p.frames_done>1){
-        const rate=p.frames_done/elapsed;
-        etaEl.textContent=formatEta((p.total_frames-p.frames_done)/rate);
-      } else {
-        etaEl.textContent='Calculating…';
-      }
-    } else if(pct<10){
-      etaEl.textContent='';
-    } else if(pct>=100){
-      etaEl.textContent='';
-    }
+        etaEl.textContent=formatEta((p.total_frames-p.frames_done)/(p.frames_done/elapsed));
+      } else { etaEl.textContent='Calculating…'; }
+    } else if(pct>=100 || phase==='compare'){ etaEl.textContent=''; }
 
-    const se=document.getElementById('stepExtract'),sa=document.getElementById('stepAnalyse'),sr=document.getElementById('stepReport');
-    if(pct>=10&&pct<95){ markDone(se); markActive(sa); }
-    else if(pct>=95){ markDone(se); markDone(sa); markActive(sr); }
+    // Step indicators (4 steps)
+    const sA=document.getElementById('stepAudio'),
+          sE=document.getElementById('stepExtract'),
+          sAI=document.getElementById('stepAnalyse'),
+          sC=document.getElementById('stepCompare');
+
+    if(phase==='audio'){                               markActive(sA); }
+    if(phase==='frames'){ markDone(sA);                markActive(sE); }
+    if(phase==='analyse'){ markDone(sA); markDone(sE); markActive(sAI); }
+    if(phase==='compare'){ markDone(sA); markDone(sE); markDone(sAI); markActive(sC); }
+    if(phase==='done'){   markDone(sA); markDone(sE); markDone(sAI); markDone(sC); }
   }
-  function markDone(el){ el.classList.remove('active'); el.classList.add('done'); const d=el.querySelector('.spinner,.step-dot'); if(d){ d.outerHTML='<div class="step-dot" style="background:var(--success)"></div>'; } }
+
+  function markDone(el){ if(el.classList.contains('done')) return; el.classList.remove('active'); el.classList.add('done'); const d=el.querySelector('.spinner,.step-dot'); if(d) d.outerHTML='<div class="step-dot" style="background:var(--success)"></div>'; }
   function markActive(el){ if(el.classList.contains('done')) return; el.classList.add('active'); const d=el.querySelector('.step-dot'); if(d) d.outerHTML='<div class="spinner"></div>'; }
 
+  // ── Results
   function showResults(results){
-    progressSec.style.display='none'; resultsSec.style.display='block'; resetBtn.style.display='inline-block';
+    progressSec.style.display='none';
+    resultsSec.style.display='block';
+    resetBtn.style.display='inline-block';
+
+    // File info bar
     if(selectedFile){
       document.getElementById('resultFileName').textContent=selectedFile.name;
       document.getElementById('resultFileSize').textContent=`${(selectedFile.size/1024/1024).toFixed(1)} MB`;
       document.getElementById('resultFileInfo').style.display='flex';
     }
+
+    // Video player in results
     if(previewURL){
       resultVideo.src=previewURL;
       resultVideo.style.display='block';
     }
-    const errors=results.errors||[];
-    document.getElementById('resultBadge').innerHTML=errors.length===0?'<span class="result-badge ok">✅ No spelling errors found!</span>':`<span class="result-badge fail">❌ ${errors.length} spelling error${errors.length>1?'s':''} found</span>`;
-    document.getElementById('statsRow').innerHTML=`<div class="stat-box"><div class="val">${results.total_frames}</div><div class="lbl">Frames scanned</div></div><div class="stat-box"><div class="val">${results.frames_with_text}</div><div class="lbl">Frames with text</div></div><div class="stat-box"><div class="val" style="color:${errors.length?'var(--error)':'var(--success)'}">${errors.length}</div><div class="lbl">Spelling errors</div></div>`;
+
+    const errors=results.errors||[], lang=results.language||'english';
+
+    // Summary badge
+    document.getElementById('resultBadge').innerHTML=errors.length===0
+      ?'<span class="result-badge ok">✅ No spelling errors found!</span>'
+      :`<span class="result-badge fail">❌ ${errors.length} spelling error${errors.length!==1?'s':''} found</span>`;
+
+    // Stats
+    const cacc=results.caption_accuracy||[];
+    const mismatches=cacc.filter(r=>r.status==='mismatch'||r.status==='no_caption').length;
+    document.getElementById('statsRow').innerHTML=`
+      <div class="stat-box"><div class="val">${results.total_frames}</div><div class="lbl">Frames scanned</div></div>
+      <div class="stat-box"><div class="val">${results.frames_with_text}</div><div class="lbl">Frames with text</div></div>
+      <div class="stat-box"><div class="val" style="color:${errors.length?'var(--error)':'var(--success)'}">${errors.length}</div><div class="lbl">Spelling errors</div></div>
+      <div class="stat-box"><div class="val" style="color:${mismatches?'var(--warn)':'var(--success)'}">${cacc.length}</div><div class="lbl">Audio segments</div></div>`;
+
+    // Tab: Spelling
     const eb=document.getElementById('errorsBlock');
     if(errors.length>0){
-      eb.innerHTML=`<div class="section-title">⚠️ Errors found</div><table class="error-table"><thead><tr><th>Time</th><th>Misspelled</th><th>Suggestion</th><th>Context</th></tr></thead><tbody>${errors.map(e=>`<tr><td>${e.timestamp}</td><td><span class="tag-error">${esc(e.word)}</span></td><td>${e.suggestion?`<span class="tag-fix">${esc(e.suggestion)}</span>`:'<span style="color:var(--muted)">—</span>'}</td><td style="color:var(--muted);font-size:12px">${esc(e.context||'')}</td></tr>`).join('')}</tbody></table>`;
-    } else { eb.innerHTML=''; }
-    const tb=document.getElementById('transcriptBody'),transcript=results.transcript||[];
-    tb.innerHTML=transcript.length?transcript.map(t=>`<div class="transcript-row"><span class="ts-time">${t.timestamp}</span><span>${esc(t.text)}</span></div>`).join(''):'<p style="color:var(--muted);font-size:13px;padding:8px 0">No on-screen text detected.</p>';
+      eb.innerHTML=`<div class="section-title">⚠️ Errors found</div>
+        <table class="data-table"><thead><tr><th>Time</th><th>Misspelled</th><th>Suggestion</th><th>Context</th></tr></thead>
+        <tbody>${errors.map(e=>`<tr>
+          <td>${e.timestamp}</td>
+          <td><span class="tag-error">${esc(e.word)}</span></td>
+          <td>${e.suggestion?`<span class="tag-fix">${esc(e.suggestion)}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+          <td style="color:var(--muted);font-size:12px">${esc(e.context||'')}</td>
+        </tr>`).join('')}</tbody></table>`;
+    } else {
+      eb.innerHTML='<p style="color:var(--success);font-size:14px;padding:8px 0">✅ No spelling errors detected.</p>';
+    }
+
+    // Tab: Caption Accuracy
+    const cb=document.getElementById('captionBlock');
+    if(cacc.length===0){
+      cb.innerHTML='<p style="color:var(--muted);font-size:13px;padding:8px 0">No audio segments detected.</p>';
+    } else {
+      const isHinglish=lang==='hinglish';
+      const note = isHinglish
+        ? '<div class="hinglish-note">🇮🇳 Hinglish mode — Whisper transcribes spoken Hindi audio. Compare against captions manually since the scripts differ.</div>'
+        : '';
+      cb.innerHTML=note+`
+        <table class="data-table"><thead><tr><th>Time</th><th>Spoken (audio)</th><th>On screen</th>${isHinglish?'':'<th>Match</th>'}</tr></thead>
+        <tbody>${cacc.map(r=>{
+          let badge='';
+          if(!isHinglish){
+            if(r.status==='match')     badge=`<span class="status-match">✓ Match</span>`;
+            else if(r.status==='partial') badge=`<span class="status-partial">~ Partial (${r.score}%)</span>`;
+            else if(r.status==='mismatch') badge=`<span class="status-mismatch">✗ Mismatch</span>`;
+            else if(r.status==='no_caption') badge=`<span class="status-nocap">No caption</span>`;
+          } else {
+            badge=`<span class="status-review">Review</span>`;
+          }
+          return `<tr>
+            <td style="white-space:nowrap">${r.timestamp}</td>
+            <td>${esc(r.spoken)}</td>
+            <td style="color:var(--muted)">${esc(r.on_screen)}</td>
+            ${isHinglish?'':`<td>${badge}</td>`}
+          </tr>`;
+        }).join('')}</tbody></table>`;
+    }
+
+    // Tab: Transcript
+    const tb=document.getElementById('transcriptBody'), transcript=results.transcript||[];
+    tb.innerHTML=transcript.length
+      ?transcript.map(t=>`<div class="transcript-row"><span class="ts-time">${t.timestamp}</span><span>${esc(t.text)}</span></div>`).join('')
+      :'<p style="color:var(--muted);font-size:13px;padding:8px 0">No on-screen text detected.</p>';
   }
 
-  function toggleTranscript(){ const b=document.getElementById('transcriptBody'); b.style.display=b.style.display==='none'?'block':'none'; }
+  // ── Tabs
+  function switchTab(name){
+    document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+      const names=['spelling','captions','transcript'];
+      b.classList.toggle('active', names[i]===name);
+    });
+    document.getElementById('tabSpelling').classList.toggle('active', name==='spelling');
+    document.getElementById('tabCaptions').classList.toggle('active', name==='captions');
+    document.getElementById('tabTranscript').classList.toggle('active', name==='transcript');
+  }
+
   function showError(msg){ errorAlert.textContent='⚠️ '+msg; errorAlert.style.display='block'; }
+
   function resetApp(){
-    clearInterval(pollTimer); selectedFile=null; fileInput.value=''; fileName.textContent=''; uploadBtn.disabled=true; uploadBtn.textContent='Check for Spelling Errors';
-    errorAlert.style.display='none'; resultsSec.style.display='none'; progressSec.style.display='none'; uploadCard.style.display='block'; resetBtn.style.display='none';
+    clearInterval(pollTimer);
+    selectedFile=null; fileInput.value=''; fileName.textContent='';
+    uploadBtn.disabled=true; uploadBtn.textContent='Check for Spelling Errors';
+    errorAlert.style.display='none';
+    resultsSec.style.display='none'; progressSec.style.display='none';
+    uploadCard.style.display='block'; resetBtn.style.display='none';
     document.getElementById('progressFill').style.width='0%';
     document.getElementById('progressEta').textContent='';
     document.getElementById('resultFileInfo').style.display='none';
     videoPreview.style.display='none'; videoPreview.src='';
     resultVideo.style.display='none'; resultVideo.src='';
     analysisStartTime=null;
+    // Reset steps
+    ['stepAudio','stepExtract','stepAnalyse','stepCompare'].forEach(id=>{
+      const el=document.getElementById(id);
+      el.className='step-item';
+      const d=el.querySelector('.spinner,.step-dot'); if(d) d.outerHTML='<div class="step-dot"></div>';
+    });
+    document.getElementById('stepAudio').classList.add('active');
+    document.getElementById('stepAudio').querySelector('.step-dot').outerHTML='<div class="spinner"></div>';
+    switchTab('spelling');
     if(previewURL){ URL.revokeObjectURL(previewURL); previewURL=null; }
   }
+
   function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 </script>
 </body>
